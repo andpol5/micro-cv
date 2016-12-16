@@ -37,15 +37,25 @@ set(MCV_LINK_LIBRARIES "-ljpeg -lpng -ltiff ${Boost_LIBRARIES}")
 
 # Defensive C++ warning flags
 if(CMAKE_COMPILER_IS_GNUCXX)
-    add_definitions(-std=c++11 -Wall -Wextra -Werror -ljpeg)
+    add_definitions(-std=c++11 -Wall -Wextra)
 endif()
 
-# Header files from this project
-#include_directories(include)
+#--------------------------------------
+# Main module lib (all source files except main.cpp)
+#--------------------------------------
+set(PROJECT_LIB_NAME ${PROJECT_NAME_STR}_lib)
+set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/include)
+include_directories(${COMMON_INCLUDES})
+# Source the cpp files  
+set(MICROCV_LIB_SOURCES 
+    src/Matrix.cpp
+    )
+
+add_library(${PROJECT_LIB_NAME} ${MICROCV_LIB_SOURCES})
 
 #--------------------------------------
 # Main binary (main.cpp + the library)
 #--------------------------------------
 set(MAIN_SOURCE src/main.cpp)
 add_executable(${PROJECT_NAME_STR} ${MAIN_SOURCE})
-target_link_libraries(${PROJECT_NAME_STR} ${MCV_LINK_LIBRARIES})
+target_link_libraries(${PROJECT_NAME_STR} ${PROJECT_LIB_NAME} ${MCV_LINK_LIBRARIES})

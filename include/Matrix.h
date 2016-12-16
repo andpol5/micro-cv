@@ -3,11 +3,10 @@
  *  Image processing micro library
  *  @author Andrei Polzounov
  */
+#include <memory>
 #include <string>
 
-
-#include <boost/mpl/vector.hpp>
-#include <boost/gil/gil_all.hpp>
+#include <boost/scoped_ptr.hpp>
 
 namespace MicroCv
 {
@@ -15,26 +14,27 @@ namespace MicroCv
 /*
  * The Matrix is an N-dimensional container of the image
  */
-template<typename DataT>
 class Matrix
 {
 public:
-  Matrix(const std::string& filename)
-  : filename_(filename), data_(NULL)
-  {
-    typedef boost::mpl::vector<boost::gil::rgb8_image_t,
-        boost::gil::rgb16_image_t> my_img_types;
-    boost::gil::rgb16_image_t image;
-    boost::gil::jpeg_read_and_convert_image(filename.c_str(), image);
-  }
-  virtual ~Matrix()
-  {
-  }
+  Matrix();
+  virtual ~Matrix();
 
+  void resize(int width, int height, int channels);
+  void toGrayscale();
+
+  uint16_t* data();
+  const uint16_t* data() const;
+
+  int width() const;
+  int height() const;
+  int channels() const;
 
 private:
-  const std::string& filename_;
-  DataT* data_;
+  boost::scoped_ptr<uint16_t> data_;
+  int width_;
+  int height_;
+  int channels_;
 };
 
 };
