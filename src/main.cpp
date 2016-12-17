@@ -13,86 +13,143 @@
 
 #include <Matrix.h>
 
-//struct PixelInserter
-//{
-//  PixelInserter(std::vector<uint16_t>* s): storage(s) {}
-//  void operator() (boost::gil::rgb16_pixel_t p) const
-//  {
-//    storage->push_back(boost::gil::at_c<0>(p));
-//    storage->push_back(boost::gil::at_c<1>(p));
-//    storage->push_back(boost::gil::at_c<2>(p));
-//  }
-//  std::vector<uint16_t>* storage;
-//};
-
 struct PixelInserter
 {
-  PixelInserter(uint16_t* s): storagePtr(s) {}
-  void operator() (boost::gil::rgb16_pixel_t p) const
-  {
-//    storage->push_back(boost::gil::at_c<2>(p));
-//    storage->push_back(boost::gil::at_c<1>(p));
-//    storage->push_back(boost::gil::at_c<0>(p));
-    *storagePtr = boost::gil::at_c<0>(p);
-    *(storagePtr + 1) = boost::gil::at_c<1>(p);
-    *(storagePtr + 2) = boost::gil::at_c<2>(p);
-  }
-  uint16_t* storagePtr;
+    PixelInserter(std::vector<uint8_t>* s) : storage(s) {}
+    void operator()(boost::gil::rgb8_pixel_t p) const {
+        using boost::gil::at_c;
+        storage->push_back(at_c<0>(p));
+        storage->push_back(at_c<1>(p));
+        storage->push_back(at_c<2>(p));
+    }
+    std::vector<uint8_t>* storage;
+};
+
+//struct PixelInserter
+//{
+//  PixelInserter(uint8_t* pixels): pixelPtr(pixels) {}
+//  void operator() (boost::gil::rgb8_pixel_t& p) const
+//  {
+//    *pixelPtr = boost::gil::at_c<0>(p);
+//    *(pixelPtr + 1) = boost::gil::at_c<1>(p);
+//    *(pixelPtr + 2) = boost::gil::at_c<2>(p);
+//  }
+//  uint8_t* pixelPtr;
+//};
+
+// This could probably share code with the PixelInserter
+struct PixelWriter
+{
+    PixelWriter(const uint8_t* pixels) : pixelPtr(pixels) {}
+
+    void operator()(boost::gil::rgb8_pixel_t& p)
+    {
+        using boost::gil::at_c;
+        at_c<0>(p) = *pixelPtr++;
+        at_c<1>(p) = *pixelPtr++;
+        at_c<2>(p) = *pixelPtr++;
+    }
+
+    void operator()(boost::gil::gray8_pixel_t& p)
+    {
+        using boost::gil::at_c;
+        at_c<0>(p) = *pixelPtr++;
+    }
+    const uint8_t* pixelPtr;
 };
 
 int main(int /*argc*/, char** /*argv*/)
 {
   using namespace boost::gil;
   // Test read jpeg
-  rgb16_image_t image1;
-  jpeg_read_and_convert_image("/home/vauser2/dev/instrumental-cv/images/lena.jpg", image1);
-  std::cout << "lena: " << image1.width() << "x" << image1.height() << std::endl;
+  rgb8_image_t lena;
+  jpeg_read_and_convert_image("../images/lena.jpg", lena);
+  auto lenaView = boost::gil::view(lena);
+  std::cout << "lena: " << lena.width() << "x" << lena.height() << "x"<< lenaView.num_channels() << std::endl;
 
-  rgb16_image_t image3;
-  tiff_read_and_convert_image("/home/vauser2/dev/instrumental-cv/images/square.tiff", image3);
-  auto dims3 = image3.dimensions();
-  std::cout << "square: " << image3.width() << "x" << image3.height() << std::endl;
+  rgb8_image_t square;
+  tiff_read_and_convert_image("../images/square.tiff", square);
+  auto squarenView = boost::gil::view(square);
+  std::cout << "square: " << square.width() << "x" << square.height() << "x"<< squarenView.num_channels() << std::endl;
 
-  rgb16_image_t image2;
-  png_read_and_convert_image("/home/vauser2/dev/instrumental-cv/images/tux.png", image2);
-  auto dims2 = image2.dimensions();
-  std::cout << "tux: " << image2.width() << "x" << image2.height() << std::endl;
+  rgb8_image_t tux;
+  png_read_and_convert_image("../images/tux.png", tux);
+  auto tuxView = boost::gil::view(tux);
+  std::cout << "tux: " << tux.width() << "x" << tux.height() << "x"<< tuxView.num_channels() << std::endl;
 
-  boost::gil::rgb16_view_t view = boost::gil::view(image2);
-//  std::vector<uint16_t> st;
-//  st.reserve(view.width() * view.height() * view.num_channels());
-//  std::cout << "reserved: " << view.width() * view.height() * view.num_channels() << "\n";
-//  boost::gil::for_each_pixel(view, PixelReverser(&st));
-//  std::cout << "size: " << st.size() << "\n";
+
+
+  std::vector<uint8_t> st;
+  st.reserve(lenaView.width() * lenaView.height() * lenaView.num_channels());
+  boost::gil::for_each_pixel(lenaView, PixelInserter(&st));
 
   MicroCv::Matrix mat;
-  mat.resize(view.width(), view.height(), view.num_channels());
-  uint16_t* dataPtr = mat.data();
-  boost::gil::for_each_pixel(view, PixelInserter(dataPtr));
+//  mat.resize(view.width(), view.height(), view.num_channels());
+  mat.setData(st, lenaView.width(), lenaView.height(), lenaView.num_channels());
+
+//  boost::gil::for_each_pixel(view, PixelInserter(dataPtr));
 
   // Test to grayscale
-  mat.toGrayscale();
-  auto view2 = nth_channel_view(view, 1);
-  boost::gil::png_write_view("../images/gil.png", view2);
+  mat.rgbToGray();
+
+  gray8_image_t img(mat.width(), mat.height());
+  gray8_view_t viewGray = boost::gil::view(img);
+  uint8_t* dataPtr = mat.data();
+  boost::gil::for_each_pixel(viewGray, PixelWriter(dataPtr));
+  boost::gil::png_write_view("../images/gil-gray.png", viewGray);
+
+
+  // From grayscale
+  mat.grayToRgb();
+
+  rgb8_image_t imgRgb(mat.width(), mat.height(), mat.channels());
+  rgb8_view_t viewRgb = boost::gil::view(imgRgb);
+  dataPtr = mat.data();
+  boost::gil::for_each_pixel(viewRgb, PixelWriter(dataPtr));
+  boost::gil::png_write_view("../images/gil-rgb.png", viewRgb);
+
+
+
+  MicroCv::Matrix mat2;
+  st.clear();
+  st.reserve(tuxView.width() * tuxView.height() * tuxView.num_channels());
+  boost::gil::for_each_pixel(tuxView, PixelInserter(&st));
+  mat2.setData(st, tuxView.width(), tuxView.height(), tuxView.num_channels());
 
   // Test crop
-  int xmin = 50;
-  int ymin = 50;
-  int xmax = 250;
-  int ymax = 250;
-  boost::gil::rgb16_view_t view3 = boost::gil::view(image1);
-  auto view4 = subimage_view(view3, xmin, ymin, xmax, ymax);
-  boost::gil::tiff_write_view("../images/gil2.tiff", view4);
+  mat2.rgbToGray();
+  mat2.crop(50, 43, 232, 387);
+
+
+  gray8_image_t imgRgb2(mat2.width(), mat2.height(), mat2.channels());
+  gray8_view_t viewRgb2 = boost::gil::view(imgRgb2);
+//  rgb8_image_t imgRgb2(mat2.width(), mat2.height(), mat2.channels());
+//  rgb8_view_t viewRgb2 = boost::gil::view(imgRgb2);
+  uint8_t* dataPtr2 = mat2.data();
+  boost::gil::for_each_pixel(viewRgb2, PixelWriter(dataPtr2));
+  boost::gil::jpeg_write_view("../images/tux-crop.jpg", viewRgb2);
+
+//  auto view2 = nth_channel_view(view, 1);
+//  boost::gil::png_write_view("../images/gil.png", view2);
+
+  // Test crop
+//  int xmin = 50;
+//  int ymin = 50;
+//  int xmax = 250;
+//  int ymax = 250;
+//  boost::gil::rgb8_view_t view3 = boost::gil::view(image1);
+//  auto view4 = subimage_view(view3, xmin, ymin, xmax, ymax);
+//  boost::gil::tiff_write_view("../images/gil2.tiff", view4);
 
   // Test writing back to file
 //  gray16_view_t view2 = view()
 
 //  boost::gil::rgb16s_view_t view = boost::gil::const_view(image2);
 //
-//  uint16_t data[view.width() * view.height() * view.num_channels()];
-//  uint16_t* cursor = data;
+//  uint8_t data[view.width() * view.height() * view.num_channels()];
+//  uint8_t* cursor = data;
 //
-//  boost::gil::rgb16_planar_ptr_t ptr;
+//  boost::gil::rgb8_planar_ptr_t ptr;
 
   return 0;
 }
