@@ -11,6 +11,17 @@
 
 using namespace MicroCv;
 
+namespace
+{
+  // Optimized way of setting pixel to 0 < x < 255 range
+  inline uint8_t clampToPixelRange(int val)
+  {
+    val &= -(val >= 0);
+    return static_cast<uint8_t>(val | ((255 - val) >> 31));
+  }
+
+}
+
 Matrix::Matrix()
 : width_(0)
 , height_(0)
@@ -135,51 +146,50 @@ bool Matrix::sobelEdges()
   uint8_t buffer[numPixels];
   memcpy(buffer, data(), numPixels* sizeof(uint8_t));
 
-  // Temporary output
-  int numPixels = width_ * height_;
-  std::vector<int16_t> tmp;
-  tmp.resize(numPixels);
-
-  uint8_t* ptr = data();
-  for(auto itr = tmp.begin(), end = tmp.end(); itr != end; ++itr, ++ptr)
-  {
-    *itr = *ptr;
-  }
+  uint8_t* dataPtr = data();
 
   // Define x and y derivative kernels (kernel size == 3)
   const int K = 3;
-  static const int8_t Gx[3][3] =
-    {{-1, 0, 1},
-     {-2, 0, 2},
-     {-1, 0, 1}};
+  const int halfK = K / 2;
+  static const int8_t Gx[9] =
+    {-1, 0, 1,
+     -2, 0, 2,
+     -1, 0, 1};
 
-  static const int8_t Gy[3][3] =
-    {{1, 2, 1},
-     {0, 0, 0},
-     {-1, -2, -1}};
+  static const int8_t Gy[9] =
+    {1,  2,  1,
+     0,  0,  0,
+    -1, -2, -1};
 
-  // Simple convolution
-  for (int i = K / 2; i < height_ - K / 2; ++i) // iterate through image
+  // Simple 2D convolution - this can be optimized by using CUDA api calls or by consecutive 1D convs
+  for (int y = halfK; y < height_ - halfK; ++y) // iterate through image
   {
-    for (int j = K / 2; j < width_ - K / 2; ++j)
+    for (int x = halfK; x < width_ - halfK; ++x)
     {
-      int sum = 0; // sum will be the sum of input data * coeff terms
+      int gxSum = 0; // Sum of the convolution is
+      int gySum = 0; // sum will be the sum of input data * coeff terms
 
-      for (int ii = - K / 2; ii <= K / 2; ++ii) // iterate over kernel
+      for (int yy = - halfK; yy <= halfK; ++yy) // iterate over kernel
       {
-        for (int jj = - K / 2; jj <= K / 2; ++jj)
+        for (int xx = - halfK; xx <= halfK; ++xx)
         {
-          int data = buffer[i + ii][j +jj];
-          int coeff = Gx[ii + K / 2][jj + K / 2];
+          int data = *(buffer + (y+yy)*width_ + (x+xx));
+          int gxCoeff = *(Gx + (yy + halfK)*K + xx + halfK);
+          int gyCoeff = *(Gy + (yy + halfK)*K + xx + halfK);
 
-          sum += data * coeff;
+          gxSum += data * gxCoeff;
+          gySum += data * gyCoeff;
         }
       }
-      out[i][j] = sum / scale; // scale sum of convolution products and store in output
+      // The sobel gradient magnituted is the sum of the absolute magnitudes of
+      // the derivates in x and y (Gx + Gy)
+      // Technically, it is G = sqrt(Gx^2 + Gy^x), but the sum of absval is easier to calculate
+      int gradientMagnitude = abs(gxSum) + abs(gySum);
+
+      // This value may be outside of the pixel range 0 < x < 255
+      *(dataPtr + y*width_ + x) = clampToPixelRange(gradientMagnitude);
     }
-
-
-
+  }
 
   return true;
 }

@@ -84,10 +84,7 @@ int main(int /*argc*/, char** /*argv*/)
   boost::gil::for_each_pixel(lenaView, PixelInserter(&st));
 
   MicroCv::Matrix mat;
-//  mat.resize(view.width(), view.height(), view.num_channels());
   mat.setData(st, lenaView.width(), lenaView.height(), lenaView.num_channels());
-
-//  boost::gil::for_each_pixel(view, PixelInserter(dataPtr));
 
   // Test to grayscale
   mat.rgbToGray();
@@ -117,39 +114,30 @@ int main(int /*argc*/, char** /*argv*/)
   mat2.setData(st, tuxView.width(), tuxView.height(), tuxView.num_channels());
 
   // Test crop
-  mat2.rgbToGray();
-  mat2.crop(50, 43, 232, 387);
+  mat2.crop(50, 43, mat2.width()-47, mat2.height()-37);
 
 
-  gray8_image_t imgRgb2(mat2.width(), mat2.height(), mat2.channels());
-  gray8_view_t viewRgb2 = boost::gil::view(imgRgb2);
-//  rgb8_image_t imgRgb2(mat2.width(), mat2.height(), mat2.channels());
-//  rgb8_view_t viewRgb2 = boost::gil::view(imgRgb2);
+//  gray8_image_t imgRgb2(mat2.width(), mat2.height(), mat2.channels());
+//  gray8_view_t viewRgb2 = boost::gil::view(imgRgb2);
+  rgb8_image_t imgRgb2(mat2.width(), mat2.height(), mat2.channels());
+  rgb8_view_t viewRgb2 = boost::gil::view(imgRgb2);
   uint8_t* dataPtr2 = mat2.data();
   boost::gil::for_each_pixel(viewRgb2, PixelWriter(dataPtr2));
   boost::gil::jpeg_write_view("../images/tux-crop.jpg", viewRgb2);
 
-//  auto view2 = nth_channel_view(view, 1);
-//  boost::gil::png_write_view("../images/gil.png", view2);
 
-  // Test crop
-//  int xmin = 50;
-//  int ymin = 50;
-//  int xmax = 250;
-//  int ymax = 250;
-//  boost::gil::rgb8_view_t view3 = boost::gil::view(image1);
-//  auto view4 = subimage_view(view3, xmin, ymin, xmax, ymax);
-//  boost::gil::tiff_write_view("../images/gil2.tiff", view4);
+  MicroCv::Matrix mat3;
+  boost::gil::for_each_pixel(tuxView, PixelInserter(&st));
+  mat3.setData(st, tuxView.width(), tuxView.height(), tuxView.num_channels());
 
-  // Test writing back to file
-//  gray16_view_t view2 = view()
+  mat3.rgbToGray();
+  mat3.sobelEdges();
 
-//  boost::gil::rgb16s_view_t view = boost::gil::const_view(image2);
-//
-//  uint8_t data[view.width() * view.height() * view.num_channels()];
-//  uint8_t* cursor = data;
-//
-//  boost::gil::rgb8_planar_ptr_t ptr;
+  gray8_image_t imgGray3(mat3.width(), mat3.height(), mat3.channels());
+  gray8_view_t viewGray3 = boost::gil::view(imgGray3);
+  uint8_t* dataPtr3 = mat3.data();
+  boost::gil::for_each_pixel(viewGray3, PixelWriter(dataPtr3));
+  boost::gil::jpeg_write_view("../images/tux-sobel.jpg", viewGray3);
 
   return 0;
 }
