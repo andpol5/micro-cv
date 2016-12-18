@@ -48,7 +48,8 @@ set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 include_directories(${COMMON_INCLUDES})
 # Source the cpp files  
 set(MICROCV_LIB_SOURCES 
-    src/Matrix.cpp
+    src/Mat.cpp
+    src/MicroCvFileIo.cpp
     )
 
 add_library(${PROJECT_LIB_NAME} ${MICROCV_LIB_SOURCES})

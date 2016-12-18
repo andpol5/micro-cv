@@ -1,25 +1,24 @@
 #pragma once
 /*
- *  Image processing micro library
+ *  Micro Computer Vision library
  *  @author Andrei Polzounov
  */
-#include <memory>
-#include <string>
 #include <vector>
-
-#include <boost/scoped_ptr.hpp>
 
 namespace MicroCv
 {
 
 /*
- * The Matrix is a container for an RGB image
+ * The Matrix is a simple container for an RGB or grayscale image
  */
-class Matrix
+class Mat
 {
 public:
-  Matrix();
-  virtual ~Matrix();
+  Mat();
+  Mat(const Mat& mat);
+  Mat(int width, int height, int channels);
+
+  virtual ~Mat();
 
   void resize(int width, int height, int channels);
 
@@ -35,6 +34,7 @@ public:
   // https://en.wikipedia.org/wiki/Sobel_operator
   bool sobelEdges();
 
+  // Pixel data accessors
   uint8_t* data();
   const uint8_t* data() const;
 
@@ -42,10 +42,10 @@ public:
   int height() const;
   int channels() const;
 
-  void setData(const std::vector<uint8_t>& vector, int width, int height, int channels);
+  std::vector<uint8_t>* vectorPtr();
 
 private:
-  boost::scoped_ptr<uint8_t> data_;
+  std::vector<uint8_t>* data_;
   int width_;
   int height_;
   int channels_;

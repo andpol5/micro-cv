@@ -1,5 +1,5 @@
 /*
- *  Image processing micro library
+ *  Micro Computer Vision library
  *  @author Andrei Polzounov
  */
 #include <cstdio>
@@ -7,7 +7,7 @@
 #include <iostream>
 #include <string>
 
-#include "Matrix.h"
+#include "Mat.h"
 
 using namespace MicroCv;
 
@@ -22,27 +22,48 @@ namespace
 
 }
 
-Matrix::Matrix()
-: width_(0)
+Mat::Mat()
+: data_(new std::vector<uint8_t>())
+, width_(0)
 , height_(0)
 , channels_(0)
 {
 }
 
-Matrix::~Matrix()
+Mat::Mat(const Mat& mat)
+: width_(mat.width_)
+, height_(mat.height_)
+, channels_(mat.channels_)
 {
-  data_.reset();
+  data_ = new std::vector<uint8_t>(*(mat.data_));
 }
 
-void Matrix::resize(int width, int height, int channels)
+Mat::Mat(int width, int height, int channels)
 {
+  resize(width, height, channels);
+}
+
+//Mat::Mat(std::vector<uint8_t>* data, int width, int height, int channels)
+//{
+//  // Takes posession of the data
+//  setData(data, width, height, channels);
+//}
+
+Mat::~Mat()
+{
+  delete data_;
+}
+
+void Mat::resize(int width, int height, int channels)
+{
+  data_->clear();
   width_ = width;
   height_ = height;
   channels_ = channels;
-  data_.reset(new uint8_t[width*height*channels]);
+  data_->resize(width*height*channels);
 }
 
-void Matrix::rgbToGray()
+void Mat::rgbToGray()
 {
   // If not already grayscale
   if(channels_ > 1)
@@ -53,7 +74,8 @@ void Matrix::rgbToGray()
     memcpy(buffer, data(), numPixels * sizeof(uint8_t));
 
     // Resize the old data to new size
-    data_.reset(new uint8_t[width_* height_]);
+    data_->clear();
+    data_->resize(width_* height_);
 
     // Add up each color from each channel and divide by number of channels
     uint8_t* buffPtr = buffer;
@@ -68,7 +90,7 @@ void Matrix::rgbToGray()
   }
 }
 
-void Matrix::grayToRgb()
+void Mat::grayToRgb()
 {
   if(isGrayscale())
   {
@@ -80,7 +102,8 @@ void Matrix::grayToRgb()
     memcpy(buffer, data(), numPixels* sizeof(uint8_t));
 
     // Resize the old data to new size
-    data_.reset(new uint8_t[width_* height_*channels_]);
+    data_->clear();
+    data_->resize(width_* height_*channels_);
 
     // Add up each color from each channel and divide by number of channels
     uint8_t* buffPtr = buffer;
@@ -94,12 +117,12 @@ void Matrix::grayToRgb()
   }
 }
 
-bool Matrix::isGrayscale() const
+bool Mat::isGrayscale() const
 {
   return channels_ == 1;
 }
 
-bool Matrix::crop(int x1, int y1, int x2, int y2)
+bool Mat::crop(int x1, int y1, int x2, int y2)
 {
   // Check bounds
   if(x1 < 0 || x1 >= x2)
@@ -134,7 +157,7 @@ bool Matrix::crop(int x1, int y1, int x2, int y2)
   return true;
 }
 
-bool Matrix::sobelEdges()
+bool Mat::sobelEdges()
 {
   if(!isGrayscale())
   {
@@ -194,33 +217,42 @@ bool Matrix::sobelEdges()
   return true;
 }
 
-uint8_t* Matrix::data()
+uint8_t* Mat::data()
 {
-  return data_.get();
+  return data_->data();
 }
 
-const uint8_t* Matrix::data() const
+const uint8_t* Mat::data() const
 {
-  return data_.get();
+  return data_->data();
 }
 
-int Matrix::width() const
+int Mat::width() const
 {
   return width_;
 }
 
-int Matrix::height() const
+int Mat::height() const
 {
   return height_;
 }
 
-int Matrix::channels() const
+int Mat::channels() const
 {
   return channels_;
 }
 
-void Matrix::setData(const std::vector<uint8_t>& vector, int width, int height, int channels)
+//void Mat::setData(std::vector<uint8_t>* data, int width, int height, int channels)
+//{
+//  width_ = width;
+//  height_ = height;
+//  channels_ = channels;
+//  // Takes possession of the vector
+//  data_ = data;
+//}
+
+std::vector<uint8_t>* Mat::vectorPtr()
 {
-  resize(width, height, channels);
-  memcpy(data(), vector.data(), width*height*channels*sizeof(uint8_t));
+  return data_;
 }
+
