@@ -3,6 +3,7 @@
  *  Micro Computer Vision library
  *  @author Andrei Polzounov
  */
+#include <cstdint>
 #include <vector>
 
 namespace MicroCv
@@ -17,7 +18,9 @@ public:
   Mat(const Mat& rhs);
   Mat(int width, int height, int channels);
   virtual ~Mat();
+
   Mat& operator=(const Mat& rhs);
+  bool operator==(const Mat& rhs) const;
 
   bool isGrayscale() const;
 

@@ -4,24 +4,24 @@
  */
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include <boost/filesystem.hpp>
-#include <boost/gil/extension/io/dynamic_io.hpp>
 #include <boost/gil/extension/io/jpeg_io.hpp>
 #include <boost/gil/extension/io/png_io.hpp>
 #include <boost/gil/extension/io/tiff_io.hpp>
 #include <boost/gil/gil_all.hpp>
 
-#include "../include/FileIo.h"
+#include "FileIo.h"
 
 using namespace MicroCv;
 
 namespace
 {
   // Possible JPEG extensions from: https://en.wikipedia.org/wiki/JPEG
-  const char* JPEG_EXTENSIONS[6] = {".jpg", ".jpeg", ".jpe", ".jif", ".jfif", ".jfi"};
-  const char* TIFF_EXTENSIONS[2] = {".tif", ".tiff"};
-  const char* PNG_EXTENSION = ".png";
+  const std::vector<std::string> JPEG_EXTENSIONS = {".jpg", ".jpeg", ".jpe", ".jif", ".jfif", ".jfi"};
+  const std::vector<std::string> TIFF_EXTENSIONS = {".tif", ".tiff"};
+  const std::string PNG_EXTENSION = ".png";
 
   struct PixelRgbReader
   {
@@ -167,27 +167,26 @@ MicroCv::ImageFileType MicroCv::imageTypeFromFilename(const std::string& filenam
   std::string extension = boost::filesystem::extension(filename);
 
   // Check JPEG
-  for(int i = 0; i < 6; i++)
+  for(auto itr = JPEG_EXTENSIONS.begin(); itr != JPEG_EXTENSIONS.end(); ++itr)
   {
-    if(extension == std::string(JPEG_EXTENSIONS[i]))
+    if(extension == std::string(*itr))
     {
       return ImageFileType::Jpeg;
     }
   }
 
   // Check PNG
-  if(extension == std::string(PNG_EXTENSION))
+  if(extension == PNG_EXTENSION)
   {
     return ImageFileType::Png;
   }
 
   // Check TIFF
-  for(int i = 0; i < 6; i++)
+  for(auto itr = TIFF_EXTENSIONS.begin(); itr != TIFF_EXTENSIONS.end(); ++itr)
   {
-    if(extension == std::string(TIFF_EXTENSIONS[i]))
+    if(extension == std::string(*itr))
     {
       return ImageFileType::Tiff;
-      break;
     }
   }
 

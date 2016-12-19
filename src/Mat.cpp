@@ -41,6 +41,12 @@ Mat& Mat::operator=(const Mat& rhs)
   return *this;
 }
 
+bool Mat::operator==(const Mat& rhs) const
+{
+  return (width_ == rhs.width_) && (height_ == rhs.height_)
+      && (channels_ == rhs.channels_) && (data_ == rhs.data_);
+}
+
 bool Mat::isGrayscale() const
 {
   return channels_ == 1;
