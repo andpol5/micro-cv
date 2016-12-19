@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.8)
 set(PROJECT_NAME_STR microcv)
 project(${PROJECT_NAME_STR} C CXX)
 
-# Find libjpeg, libpng and libtiff
+# Find and add libjpeg, libpng and libtiff
 find_package(JPEG REQUIRED)
 if (JPEG_FOUND)
   	include_directories(${JPEG_INCLUDE_DIR})
@@ -29,8 +29,10 @@ if (Boost_FOUND)
 	link_directories(${Boost_LIBRARY_DIR})
 endif()
 
-# Set C++11 flag
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+# Set C++11 flag and warnings 
+if(CMAKE_COMPILER_IS_GNUCXX)
+    add_definitions(-std=c++11 -Wall -Wextra -Werror)
+endif()
 
 # Add jpeg and png linker flags and then boostlibs
 set(MCV_LINK_LIBRARIES "-ljpeg -lpng -ltiff ${Boost_LIBRARIES}")
@@ -48,8 +50,9 @@ set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 include_directories(${COMMON_INCLUDES})
 # Source the cpp files  
 set(MICROCV_LIB_SOURCES 
+    src/ImageProcessing.cpp
+    src/FileIo.cpp    
     src/Mat.cpp
-    src/MicroCvFileIo.cpp
     )
 
 add_library(${PROJECT_LIB_NAME} ${MICROCV_LIB_SOURCES})
