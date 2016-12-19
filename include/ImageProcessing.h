@@ -18,3 +18,4 @@ namespace MicroCv
   // Edge detection (high-pass filter)
   Mat sobelEdgeDetector(const Mat& inputMat);
 };
+

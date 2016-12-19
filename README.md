@@ -1,28 +1,74 @@
 # README #
 
-## ASSIGNMENT: IMAGE-PROCESSING MICROLIBRARY ##
-Please write a small library for applying a series of transformations to an image in the language of your choice. For the purposes of this assignment, the library only needs to support two transformations:  
+## Micro Computer Vision Library C++##
+This library ain't no OpenCv, but it can do the following operations fast:
+* Read and write jpeg, png and tiff images
+* Crop the image
+* Convert RGB images to grayscale and viceversa
+* Edge detection with the [Sobel Operator](en.wikipedia.org/wiki/Sobel_operator).
 
-* Convert the image to grayscale
-* Any one of these transforms (we respect your time -- please only implement one!):
-	* Crop the image
-	* Resize the image
-	* Or just surprise us with an image transformation of your choice!
+It is written in C++11. It uses the [boost::gil](www.boost.org/doc/libs/release/libs/gil/) library for file I/O (which in turn uses libjpeg, libpng and libtiff), but the dependency on GIL is encapsulated within FileIo.cpp and it can easily be replaced with OpenCV or libjpeg.
 
-I encourage you to reach out with any questions you have.
 
-## EXPECTATIONS ##
-We expect the code to be at the bar that you consider "production quality." For us, that means:
+## Build Instructions ##
+Only Linux is supported for now:
 
-* It meets the technical requirements ("it works")
-* It is at a state where you could comfortably open-source the library, or could reasonably hand it over to be maintained by another engineer.
+### Linux ###
+Install depedendecies: libpng, libjpeg, libtiff, boost, cmake and git
 
-From another perspective, the library should be in a state in which you would be happy to receive it if you were tapped to become its new maintainer.
+On ubuntu:
+```
+sudo apt-get install libpng12-dev libjpeg-dev libtiff5-dev libboost-all-dev cmake git
+mkdir build
+cd build
+cmake ..
+make
+# run one of the sample programs
+./microcv_sobel_edges --in_file "file1" --out_file "file2"
+```
 
-We will assess your work on these dimensions:
+## Unit Tests ##
+Unit tests are built automatically - during the process the laters googletest master will be checked
+automatically from GitHub and built in place. Following that the unit tests can be run with:
 
-* ability to ask the right questions
-* robust, meaningful tests & documentation
-* ability to write readable, well-structured code
-* clearly communicated reasoning about the code
-* resourcefulness
+`./test_microcv`
+
+The googletest cmake script is based on the following GitHub repo - [google-test-examples](https://github.com/snikulov/google-test-examples/).
+
+
+## Tech Details ##
+
+### MicroCv::Mat ###
+
+The MicroCv library is based on the MicroCv::Mat class - it is a simple container for a pixel raster. 
+
+![Raster Data](images/raster_dataset.png)
+
+In a raster the data is laid out in one continous buffer and a pixel at location (x, y) can be accessed using the following formula:
+```
+pixel_offset = y*numberOfColumns + x
+pixel = raster[pixel_offset]
+```
+
+The pixels are stored as unsigned char (uint8_t) pixels in an std::vector. MicroCv::Mat provides access to this vector and to the pointers of the data - care must be taken not to exceed memory bounds (the last pixel will be in data[mat.width()\*mat.height()\*mat.channels()-1].
+
+MicroCv::Mat works in two modes RGB and grayscale when in RGB each pixel will have the RGB values stored in 3 consecutive bytes, and in grayscale mode consecutive bytes will refer to adjacent pixels. 
+
+### Image Processing ###
+The following image processing functions are currently available:
+* Cropping a matrix
+* RGB to Gray and vice-versa
+* [Sobel Edge Detector](en.wikipedia.org/wiki/Sobel_operator)
+
+## Precompiled binaries ##
+Precompiled x86_64 binaries are available in the bin directory, each of these performs a simple image processing function from the command line
+* bin/microcv_crop
+* bin/microcv_rgb2gray
+* bin/microcv_sobel_edges
+* bin/test_microcv (compiled unit tests)
+
+
+## Using MicroCv as a C++ library ##
+The library libmicrocv.a can be recompiled or taken from bin/ and then new C++ code can link against it:
+
+`g++ -o some_other_program other_cpp_files.cpp -I/path/to/microcv/include -L/path/to/libmicrocv -lmicrocv`

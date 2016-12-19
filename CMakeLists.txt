@@ -24,7 +24,7 @@ endif()
 
 # Try to find the Boost libraries and includes automagically
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost COMPONENTS filesystem system REQUIRED)
+find_package(Boost COMPONENTS filesystem system program_options REQUIRED)
 if (Boost_FOUND)
 	include_directories(${Boost_INCLUDE_DIR})
 	link_directories(${Boost_LIBRARY_DIR})
@@ -59,11 +59,16 @@ set(MICROCV_LIB_SOURCES
 add_library(${PROJECT_LIB_NAME} ${MICROCV_LIB_SOURCES})
 
 #--------------------------------------
-# Main binary (main.cpp + the library)
+# Main binaries (main_*.cpp + the library)
 #--------------------------------------
-set(MAIN_SOURCE src/main.cpp)
-add_executable(${PROJECT_NAME_STR} ${MAIN_SOURCE})
-target_link_libraries(${PROJECT_NAME_STR} ${PROJECT_LIB_NAME} ${MCV_LINK_LIBRARIES})
+add_executable(${PROJECT_NAME_STR}_crop src/main_crop.cpp)
+target_link_libraries(${PROJECT_NAME_STR}_crop ${PROJECT_LIB_NAME} ${MCV_LINK_LIBRARIES})
+
+add_executable(${PROJECT_NAME_STR}_rgb2gray src/main_rgb2gray.cpp)
+target_link_libraries(${PROJECT_NAME_STR}_rgb2gray ${PROJECT_LIB_NAME} ${MCV_LINK_LIBRARIES})
+
+add_executable(${PROJECT_NAME_STR}_sobel_edges src/main_sobel_edges.cpp)
+target_link_libraries(${PROJECT_NAME_STR}_sobel_edges ${PROJECT_LIB_NAME} ${MCV_LINK_LIBRARIES})
 
 #--------------------------------------
 # Test (adapted from github.com/snikulov/google-test-examples/)
