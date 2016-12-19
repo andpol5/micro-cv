@@ -15,6 +15,6 @@ namespace MicroCv
   Mat rgbToGray(const Mat& inputMat);
   Mat grayToRgb(const Mat& inputMat);
 
-  // Edge detection
+  // Edge detection (high-pass filter)
   Mat sobelEdgeDetector(const Mat& inputMat);
 };

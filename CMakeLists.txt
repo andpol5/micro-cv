@@ -3,6 +3,7 @@ set(PROJECT_NAME_STR microcv)
 project(${PROJECT_NAME_STR} C CXX)
 
 # Find and add libjpeg, libpng and libtiff
+find_package(Threads REQUIRED)
 find_package(JPEG REQUIRED)
 if (JPEG_FOUND)
   	include_directories(${JPEG_INCLUDE_DIR})
@@ -31,11 +32,11 @@ endif()
 
 # Set C++11 flag and warnings 
 if(CMAKE_COMPILER_IS_GNUCXX)
-    add_definitions(-std=c++11 -Wall -Wextra -Werror)
+    add_definitions(-std=c++11 -Wall -Wextra -Werror -pthread)
 endif()
 
 # Add jpeg and png linker flags and then boostlibs
-set(MCV_LINK_LIBRARIES "-ljpeg -lpng -ltiff ${Boost_LIBRARIES}")
+set(MCV_LINK_LIBRARIES "-ljpeg -lpng -ltiff -pthread ${Boost_LIBRARIES}")
 
 # Defensive C++ warning flags
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -63,3 +64,38 @@ add_library(${PROJECT_LIB_NAME} ${MICROCV_LIB_SOURCES})
 set(MAIN_SOURCE src/main.cpp)
 add_executable(${PROJECT_NAME_STR} ${MAIN_SOURCE})
 target_link_libraries(${PROJECT_NAME_STR} ${PROJECT_LIB_NAME} ${MCV_LINK_LIBRARIES})
+
+#--------------------------------------
+# Test (adapted from github.com/snikulov/google-test-examples/)
+#--------------------------------------
+set(EXT_PROJECTS_DIR ${PROJECT_SOURCE_DIR}/ext)
+add_subdirectory(${EXT_PROJECTS_DIR}/gtest)
+
+enable_testing()
+
+set(PROJECT_TEST_NAME test_${PROJECT_NAME_STR})
+include_directories(${GTEST_INCLUDE_DIRS} ${COMMON_INCLUDES})
+
+file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/*.cpp)
+add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES})
+add_dependencies(${PROJECT_TEST_NAME} googletest)
+
+
+if(NOT WIN32 OR MINGW)
+    target_link_libraries(${PROJECT_TEST_NAME}
+        ${GTEST_LIBS_DIR}/libgtest.a
+        ${GTEST_LIBS_DIR}/libgtest_main.a
+        )
+else()
+    target_link_libraries(${PROJECT_TEST_NAME}
+        debug ${GTEST_LIBS_DIR}/DebugLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest${CMAKE_FIND_LIBRARY_SUFFIXES}
+        optimized ${GTEST_LIBS_DIR}/ReleaseLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest${CMAKE_FIND_LIBRARY_SUFFIXES}
+        )
+    target_link_libraries(${PROJECT_TEST_NAME}
+        debug ${GTEST_LIBS_DIR}/DebugLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest_main${CMAKE_FIND_LIBRARY_SUFFIXES}
+        optimized ${GTEST_LIBS_DIR}/ReleaseLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest_main${CMAKE_FIND_LIBRARY_SUFFIXES}
+        )
+endif()
+
+target_link_libraries(${PROJECT_TEST_NAME} ${PROJECT_LIB_NAME} ${MCV_LINK_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+add_test(test1 ${PROJECT_TEST_NAME})

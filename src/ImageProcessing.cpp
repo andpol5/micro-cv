@@ -56,14 +56,11 @@ void MicroCv::cropMat(Mat& mat, int x1, int y1, int x2, int y2)
 Mat MicroCv::rgbToGray(const Mat& inputMat)
 {
   Mat outputMat;
-  // If not already grayscale
   int numChannels = inputMat.channels();
-  if(numChannels > 1)
+  // If in RGB mode
+  if(numChannels == 3)
   {
-    // Copy the const reference
-    Mat in = inputMat;
-
-    int numPixels = inputMat.width() * inputMat.height();
+    const int numPixels = inputMat.width() * inputMat.height();
 
     // Resize the output data
     outputMat.resize(inputMat.width(), inputMat.height(), 1);
@@ -81,7 +78,7 @@ Mat MicroCv::rgbToGray(const Mat& inputMat)
       *outPtr = static_cast<uint8_t>(newVal * oneThird);
     }
   }
-  else if(inputMat.channels() == 1)
+  else if(numChannels == 1)
   {
     outputMat = inputMat;
   }
@@ -93,9 +90,8 @@ Mat MicroCv::grayToRgb(const Mat& inputMat)
   Mat outputMat;
   if(inputMat.isGrayscale())
   {
-    int numChannels = 3;
-
-    int numPixels = inputMat.width() * inputMat.height();
+    const int numChannels = 3;
+    const int numPixels = inputMat.width() * inputMat.height();
 
     // Resize the output data
     outputMat.resize(inputMat.width(), inputMat.height(), numChannels);
@@ -136,7 +132,7 @@ Mat MicroCv::sobelEdgeDetector(const Mat& inputMat)
   const uint8_t* inPtr = grayMat.data();
   uint8_t* outPtr = outputMat.data();
 
-  // Define x and y derivative kernels (kernel size == 3)
+  // Define x and y derivative kernels (fixed kernel size of 3)
   const int K = 3;
   const int halfK = K / 2;
   static const int8_t Gx[9] =
@@ -157,8 +153,8 @@ Mat MicroCv::sobelEdgeDetector(const Mat& inputMat)
   {
     for (int x = halfK; x < width - halfK; ++x)
     {
-      int gxSum = 0; // Sum of the convolution is
-      int gySum = 0; // sum will be the sum of input data * coeff terms
+      int gxSum = 0; // Sum of the convolution:
+      int gySum = 0; // it will be the sum of input data * coeff terms
 
       for (int yy = - halfK; yy <= halfK; ++yy) // iterate over kernel
       {
@@ -177,7 +173,7 @@ Mat MicroCv::sobelEdgeDetector(const Mat& inputMat)
       // Technically, it is G = sqrt(Gx^2 + Gy^x), but the sum of absval is easier to calculate
       int gradientMagnitude = abs(gxSum) + abs(gySum);
 
-      // This value may be outside of the pixel range 0 < x < 255
+      // This value may be outside of the pixel range 0 < x < 255, so we clamp it to valid range
       *(outPtr + y*width + x) = clampToPixelRange(gradientMagnitude);
     }
   }

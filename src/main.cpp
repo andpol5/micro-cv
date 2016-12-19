@@ -2,7 +2,6 @@
  *  Micro Computer Vision library
  *  @author Andrei Polzounov
  */
-#include <cstdint>
 #include <iostream>
 #include <vector>
 
@@ -10,15 +9,13 @@
 #include "ImageProcessing.h"
 #include "Mat.h"
 
-//using namespace MicroCv;
-
 int main(int /*argc*/, char** argv)
 {
   std::string fileIn(argv[1]);
   std::string fileOut(argv[2]);
 
   bool ok;
-  MicroCv::Mat inputMat  = MicroCv::readMatFromFile(fileIn, MicroCv::imageTypeFromFilename(fileIn), ok);
+  MicroCv::Mat inputMat = MicroCv::readMatFromFile(fileIn, MicroCv::imageTypeFromFilename(fileIn), ok);
 
   if(ok)
   {
@@ -29,6 +26,5 @@ int main(int /*argc*/, char** argv)
 
     MicroCv::writeMatToFile(fileOut, tmp, MicroCv::imageTypeFromFilename(fileOut));
   }
-
   return 0;
 }
