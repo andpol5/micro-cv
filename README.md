@@ -5,9 +5,9 @@ This library ain't no OpenCv, but it can do the following operations fast:
 * Read and write jpeg, png and tiff images
 * Crop the image
 * Convert RGB images to grayscale and viceversa
-* Edge detection with the [Sobel Operator](en.wikipedia.org/wiki/Sobel_operator).
+* Edge detection with the [Sobel Operator](https://en.wikipedia.org/wiki/Sobel_operator).
 
-It is written in C++11. It uses the [boost::gil](www.boost.org/doc/libs/release/libs/gil/) library for file I/O (which in turn uses libjpeg, libpng and libtiff), but the dependency on GIL is encapsulated within FileIo.cpp and it can easily be replaced with OpenCV or libjpeg.
+It is written in C++11. It uses the [boost::gil](https://www.boost.org/doc/libs/release/libs/gil/) library for file I/O (which in turn uses libjpeg, libpng and libtiff), but the dependency on GIL is encapsulated within FileIo.cpp and it can easily be replaced with OpenCV or libjpeg.
 
 
 ## Build Instructions ##
@@ -58,7 +58,7 @@ MicroCv::Mat works in two modes RGB and grayscale when in RGB each pixel will ha
 The following image processing functions are currently available:
 * Cropping a matrix
 * RGB to Gray and vice-versa
-* [Sobel Edge Detector](en.wikipedia.org/wiki/Sobel_operator)
+* [Sobel Edge Detector](https://en.wikipedia.org/wiki/Sobel_operator)
 
 ## Precompiled binaries ##
 Precompiled x86_64 binaries are available in the bin directory, each of these performs a simple image processing function from the command line
