@@ -1,6 +1,6 @@
 # README #
 
-## Micro Computer Vision Library C++##
+## Micro Computer Vision Library C++ ##
 This library ain't no OpenCv, but it can do the following operations fast:
 * Read and write jpeg, png and tiff images
 * Crop the image
